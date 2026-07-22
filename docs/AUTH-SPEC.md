@@ -106,7 +106,8 @@ RLS only scopes student *reads*. These are Render's job and must never be assume
 
 ---
 
-## 8. Open items to confirm before build
-1. **Access-code uniqueness:** codes must be unique enough that step 1's lookup is unambiguous. Recommend a `unique` constraint on `exams.access_code` among concurrently-live exams (or globally). Add in a follow-up migration.
-2. **Realtime role:** this spec assumes students connect to Supabase as `authenticated`. If you prefer `anon`, the RLS `to authenticated` clauses and the token `role` claim both change.
-3. **Refresh token store:** Render-side table vs. Redis (the same Render instance already runs a queue in Phase 7). Recommend reusing that Redis.
+## 8. Open items
+1. **Access-code uniqueness** — ✅ RESOLVED. Global `unique` constraint on `exams.access_code` added in migration `0002`; the login lookup is now unambiguous.
+2. **JWT signing method** — ⚠️ CONFIRM. The code signs tokens HS256 with the project's legacy shared JWT secret (`SUPABASE_JWT_SECRET`), which Supabase Realtime verifies natively. Newer Supabase projects may default to **asymmetric JWT signing keys**; if Realtime rejects the minted tokens, switch to the project's signing key. Verify once Phase 5 (Realtime monitoring) is wired.
+3. **Realtime role** — the implementation assumes students connect to Supabase as `authenticated` (access token carries `role: "authenticated"`, matching the `to authenticated` RLS policies in `0001`). Change both together if you prefer `anon`.
+4. **Refresh token store** — ✅ RESOLVED without a store. The refresh token is a JWT bound to `session_token_id`; revocation is enforced by matching it against `active_sessions` on every refresh, so an admin "clear session" invalidates it immediately. No Redis/table needed for auth (Phase 7 Redis is still used for the AI queue).

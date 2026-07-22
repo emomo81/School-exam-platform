@@ -17,14 +17,19 @@ function optional(name: string, fallback: string): string {
 export const env = {
   port: Number(optional("PORT", "8080")),
   nodeEnv: optional("NODE_ENV", "development"),
+  isProd: optional("NODE_ENV", "development") === "production",
 
-  // Supabase — service role bypasses RLS; used for all writes (PRD §8.1).
-  supabaseUrl: required("SUPABASE_URL"),
-  supabaseServiceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
+  // Direct Postgres connection string (Supabase → Project Settings → Database).
+  // The API connects as the DB owner and performs all writes; RLS does not apply
+  // to this connection (PRD §8.1). Keep it secret.
+  databaseUrl: required("SUPABASE_DB_URL"),
 
-  // Shared JWT secret: must equal the Supabase project JWT secret so Supabase
-  // verifies Render-issued student tokens natively (AUTH-SPEC §2).
+  // Shared JWT secret: must equal the Supabase project's JWT secret so Supabase
+  // Realtime verifies the student tokens Render mints (AUTH-SPEC §2/§3).
   supabaseJwtSecret: required("SUPABASE_JWT_SECRET"),
-};
+
+  // Access-token TTL (seconds). Short by design (AUTH-SPEC §3).
+  accessTokenTtlSeconds: Number(optional("ACCESS_TOKEN_TTL_SECONDS", "600")),
+} as const;
 
 export type Env = typeof env;
