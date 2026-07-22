@@ -1,5 +1,10 @@
 // Centralised env access for the Render API service.
 // These are server-only secrets — they must NEVER be exposed to the frontend.
+//
+// Load api/.env before reading anything. Imported first so process.env is
+// populated regardless of entry point. In production (Render) the platform
+// injects env vars directly and no .env file is present, which is fine.
+import "dotenv/config";
 
 function required(name: string): string {
   const value = process.env[name];

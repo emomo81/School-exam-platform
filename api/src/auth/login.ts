@@ -77,13 +77,15 @@ export async function studentLogin(req: Request, res: Response): Promise<void> {
         [roll_number, exam.id, sessionTokenId],
       );
       if (claimRes.rowCount === 0) {
-        // A session is already live for this student → block the newcomer, log it.
+        // A session is already live for this student → block the newcomer and
+        // log it. We RETURN (not throw) so the transaction commits and the audit
+        // row persists; throwing here would roll the audit insert back too.
         await client.query(
           `insert into audit_logs (actor_role, action, entity, entity_id, after)
            values ('student', 'login_conflict', 'exam', $1, $2)`,
           [exam.id, JSON.stringify({ roll_number, ip: req.ip })],
         );
-        throw new LoginFailure("session_conflict");
+        return { kind: "conflict" as const };
       }
 
       // 6. Bootstrap or resume the attempt.
@@ -99,8 +101,16 @@ export async function studentLogin(req: Request, res: Response): Promise<void> {
         attemptId = created.rows[0].id;
       }
 
-      return { exam, attemptId, sessionTokenId };
+      return { kind: "ok" as const, exam, attemptId, sessionTokenId };
     });
+
+    // Session-conflict: the audit row was committed inside the transaction; the
+    // student gets the same generic failure as every other rejected login.
+    if (result.kind === "conflict") {
+      // eslint-disable-next-line no-console
+      console.info(`login_failed reason=session_conflict roll=${roll_number}`);
+      return sendGenericLoginFailure(res);
+    }
 
     // 7. Issue tokens; remaining time is computed server-side (never trust client).
     const { exam, attemptId, sessionTokenId } = result;
