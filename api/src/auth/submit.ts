@@ -1,13 +1,11 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import { withTransaction } from "../db.js";
-import { env } from "../env.js";
-import type { SessionClaims } from "../jwt.js";
+import { verifyAccessToken, type SessionClaims } from "../jwt.js";
 
 /**
  * POST /auth/student/submit   (Authorization: Bearer <access token>)
  * Marks the attempt submitted and frees the active-session slot (AUTH-SPEC §5).
- * NOTE: grading/answer-finalisation is Phase 3/6 — this only closes the session.
+ * NOTE: MCQ auto-grading is Phase 6 — this only closes the attempt + session.
  */
 export async function studentSubmit(req: Request, res: Response): Promise<void> {
   const claims = readAccessToken(req);
@@ -40,16 +38,7 @@ function readAccessToken(req: Request): SessionClaims | null {
   const header = req.header("authorization");
   if (!header?.startsWith("Bearer ")) return null;
   try {
-    const payload = jwt.verify(header.slice(7), env.supabaseJwtSecret, {
-      algorithms: ["HS256"],
-    }) as jwt.JwtPayload;
-    if (payload.typ !== "access") return null;
-    return {
-      sub: String(payload.sub),
-      roll_number: String(payload.roll_number),
-      exam_id: String(payload.exam_id),
-      session_token_id: String(payload.session_token_id),
-    };
+    return verifyAccessToken(header.slice(7));
   } catch {
     return null;
   }

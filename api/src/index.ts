@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import { env } from "./env.js";
 import { authRouter } from "./auth/router.js";
 import { teacherRouter } from "./teacher/router.js";
+import { examRouter } from "./exam/router.js";
 import { errorHandler } from "./http.js";
 
 const app = express();
@@ -20,6 +21,9 @@ app.use("/auth", authRouter);
 
 // Teacher/admin CRUD (Phase 2): courses, roster, exams, questions
 app.use("/teacher", teacherRouter);
+
+// Student exam-taking runtime (Phase 3): state, answers, submit
+app.use("/exam", examRouter);
 
 // Central error handler — must be registered after routes.
 app.use(errorHandler);

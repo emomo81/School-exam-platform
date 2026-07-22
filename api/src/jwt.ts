@@ -50,6 +50,19 @@ export function verifyRefreshToken(token: string): SessionClaims {
     algorithms: ["HS256"],
   }) as jwt.JwtPayload;
   if (payload.typ !== "refresh") throw new Error("wrong token type");
+  return claimsFrom(payload);
+}
+
+/** Verify a student access token (Authorization: Bearer). Throws on invalid/expired. */
+export function verifyAccessToken(token: string): SessionClaims {
+  const payload = jwt.verify(token, env.supabaseJwtSecret, {
+    algorithms: ["HS256"],
+  }) as jwt.JwtPayload;
+  if (payload.typ !== "access") throw new Error("wrong token type");
+  return claimsFrom(payload);
+}
+
+function claimsFrom(payload: jwt.JwtPayload): SessionClaims {
   return {
     sub: String(payload.sub),
     roll_number: String(payload.roll_number),
