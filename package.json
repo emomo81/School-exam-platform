@@ -1,0 +1,19 @@
+{
+  "name": "school-exam-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web-based digital examination platform (PRD v1.3).",
+  "workspaces": [
+    "web",
+    "api"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "npm run dev -w web",
+    "dev:api": "npm run dev -w api",
+    "build": "npm run build -w web && npm run build -w api",
+    "typecheck": "npm run typecheck -w web && npm run typecheck -w api"
+  }
+}

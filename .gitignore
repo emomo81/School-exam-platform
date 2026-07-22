@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+web/.next/
+web/out/
+api/dist/
+*.tsbuildinfo
+
+# env / secrets — never commit
+.env
+.env.local
+.env.*.local
+web/.env.local
+api/.env
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
